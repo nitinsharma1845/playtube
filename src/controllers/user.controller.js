@@ -19,13 +19,16 @@ const registerUser = asyncHandler(async (req, res) => {
   const { fullName, email, username, password } = req.body;
   console.log("Email and passsword ::::::", email, password);
 
+  console.log(req.body)
+  console.log(req.files)
+
   if (
     [fullName, email, username, password].some((feild) => feild?.trim() === "")
   ) {
     throw new apiError(400, "All Feilds are required");
   }
 
-  const existedUser = User.findOne({
+  const existedUser = await User.findOne({
     $or: [{ username }, { email }],
   });
 
@@ -35,6 +38,9 @@ const registerUser = asyncHandler(async (req, res) => {
 
   const avatarLocalPath = req.files?.avatar[0]?.path;
   const coverImagePath = req.files?.coverImage[0]?.path;
+  
+  // console.log(avatarLocalPath)
+  // console.log(coverImagePath)
 
   if (!avatarLocalPath) {
     throw new apiError(400, "Avatar is required");
@@ -43,7 +49,9 @@ const registerUser = asyncHandler(async (req, res) => {
   const avatar = await uploadToCloudinary(avatarLocalPath);
   const coverImage = await uploadToCloudinary(coverImagePath);
 
-  if (avatar) {
+  // console.log("Avtar URL :::::::::::::" , avatar.url)
+
+  if (!avatar) {
     throw new apiError(400, "Avatar is required");
   }
 
@@ -60,7 +68,7 @@ const registerUser = asyncHandler(async (req, res) => {
     "-password -refreshToken"
   )
 
-  if(createdUser){
+  if(!createdUser){
     throw new apiError(500 , "Something went Wrong while registring the user")
   }
 
