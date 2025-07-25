@@ -1,6 +1,7 @@
 import { v2 as cloudinary } from "cloudinary";
 import fs from "fs";
 import { apiError } from "./ApiError.js";
+import { ApiResponse } from "./ApiResponse.js";
 
 async function uploadToCloudinary(localFilePath) {
   try {
@@ -17,6 +18,7 @@ async function uploadToCloudinary(localFilePath) {
     const response = await cloudinary.uploader.upload(localFilePath, {
       resource_type: "auto",
     });
+    console.log(response)
     if (response) {
       if (fs.existsSync(localFilePath)) {
         fs.unlinkSync(localFilePath);
@@ -33,4 +35,14 @@ async function uploadToCloudinary(localFilePath) {
   }
 }
 
-export { uploadToCloudinary };
+
+async function deleteImage(publicId){
+  try {
+    return await cloudinary.uploader.destroy(publicId)
+  } catch (error) {
+    console.log("Error while deleting the file :::::::" , error)
+  }
+
+}
+
+export { uploadToCloudinary, deleteImage };
