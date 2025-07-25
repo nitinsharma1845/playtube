@@ -16,8 +16,10 @@ app.use(cookieParser())
 //routes
 
 import userRouter from "./routes/user.routes.js";
+import tweetsRouter from './routes/tweets.routes.js'
 
 //routes decelartion
 app.use("/api/v1/users" , userRouter)
+app.use('/api/v1/tweets' , tweetsRouter)
 
 export {app} 
