@@ -1,7 +1,7 @@
-import { asyncHandler } from "../utils/asyncHandler";
-import { apiError } from "../utils/ApiError";
-import { ApiResponse } from "../utils/ApiResponse";
-import { Tweet } from "../models/tweets.model";
+import { asyncHandler } from "../utils/asyncHandler.js";
+import { apiError } from "../utils/ApiError.js";
+import { ApiResponse } from "../utils/ApiResponse.js";
+import { Tweet } from "../models/tweets.model.js";
 
 const createTweet = asyncHandler(async (req, res) => {
   try {
@@ -105,15 +105,19 @@ const getUserTweets = asyncHandler(async (req, res) => {
 });
 
 const deleteTweet = asyncHandler(async (req, res) => {
-  const tweetId = req.params.tweetId;
-  const userId = req.body._id;
+  const { tweetId } = req.params;
+
+  const userId = req.user?._id;
+
+  if (!tweetId) throw new apiError(400, "Tweet is not found");
+
+  if (!userId) throw new apiError(401, "User not found");
 
   const tweet = await Tweet.findById(tweetId);
 
-  if (!tweetId || !userId)
-    throw new apiError(400, "User or tweet may not found");
+  if (!tweet) throw new apiError(400, "Tweet not found");
 
-  if (userId.toLowerCase() !== tweet.owner?.toLowerCase())
+  if (tweet.owner.toString() !== userId.toString())
     throw new apiError(400, "User is not authorized to delete the tweet!!");
 
   await Tweet.deleteOne();
@@ -123,4 +127,31 @@ const deleteTweet = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, null, "Tweet Deleted Successfully"));
 });
 
-export { createTweet, getAllTweet, getUserTweets, deleteTweet };
+const updateTweet = asyncHandler(async (req, res) => {
+  const userId = req.user?._id;
+  const { content } = req.body;
+  const { tweetId } = req.params;
+
+  console.log(userId, content, tweetId);
+
+  if (!userId) throw new apiError(400, "User not found!");
+
+  if (!content.trim() || !content)
+    throw new apiError(400, "Content is required");
+
+  const tweet = await Tweet.findById(tweetId);
+
+  if (!tweet) throw new apiError(400, "Tweet not found");
+
+  if (tweet.owner.toString() !== userId.toString())
+    throw new apiError(401, "User is not authorised to update the tweet");
+
+  tweet.content = content;
+  await tweet.save({ validateBeforeSave: false });
+
+  res
+    .status(200)
+    .json(new ApiResponse(200, tweet, "Tweet updated successfully"));
+});
+
+export { createTweet, getAllTweet, getUserTweets, deleteTweet, updateTweet };
