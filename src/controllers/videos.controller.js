@@ -10,7 +10,7 @@ const publishVideo = asyncHandler(async (req, res) => {
   if (!title || !description)
     throw new apiError(401, "Title or Description is required");
 
-  const videoLocalPath = req.files?.video[0]?.path;
+  const videoLocalPath = req.files?.videoFile[0]?.path;
   const tumbnailLocalPath = req.files?.thumbnail[0]?.path;
 
   if (!videoLocalPath) throw new apiError(404, "Video not found !");
@@ -19,15 +19,23 @@ const publishVideo = asyncHandler(async (req, res) => {
 
   const thumbnail = await uploadToCloudinary(tumbnailLocalPath);
 
-  if (!videoFile)
+  if (!videoFile.url)
     throw new apiError(500, "error while uploading to cloudinary");
+
+  function formatedDuration(time) {
+    const mins = Math.floor(time / 60);
+    const secs = Math.floor(time % 60);
+    return `${mins}:${secs.toString().padStart(2, "0")}`;
+  }
+
+  const duration = formatedDuration(videoFile.duration);
 
   const video = await Video.create({
     title,
     videoFile: videoFile.url,
     thumbnail: thumbnail.url,
     description,
-    duration: videoFile.duration,
+    duration: duration,
     owner: req.user._id,
   });
 

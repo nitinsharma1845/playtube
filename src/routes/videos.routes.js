@@ -16,7 +16,7 @@ router.route("/post-video").post(
   verifyJWT,
   upload.fields([
     {
-      name: "video",
+      name: "videoFile",
       maxCount: 1,
     },
     {
